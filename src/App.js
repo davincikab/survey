@@ -1,24 +1,35 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import ReactMapboxGl, { Layer, Feature } from 'react-mapbox-gl';
+
+const Map = ReactMapboxGl({
+  accessToken:
+  'pk.eyJ1IjoiZGF1ZGk5NyIsImEiOiJjanJtY3B1bjYwZ3F2NGFvOXZ1a29iMmp6In0.9ZdvuGInodgDk7cv-KlujA'
+});
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div className="row">
+          <div className="col-8">
+            <Map
+              style="mapbox://styles/mapbox/streets-v9"
+              containerStyle={{
+                height: '80vh',
+                width: '100%'
+              }}
+            >
+              <Layer type="symbol" id="marker" layout={{ 'icon-image': 'marker-15' }}>
+                <Feature coordinates={[-0.481747846041145, 51.3233379650232]} />
+              </Layer>
+            </Map>
+          </div>
+          <div className="col-4 section">
+              <form>
+                <h5>User Details Form</h5>
+              </form>
+          </div>
+      </div>
     </div>
   );
 }

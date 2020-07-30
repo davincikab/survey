@@ -1,17 +1,23 @@
-.App {
-  text-align: center;
+:root {
+  --brand-color:#282c34;
+  --white:#fff;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+body {
+  box-sizing: border-box;
+  font-size: calc(0.625em + 2vmin);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.row {
+  width: 100%;
+  height: auto;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2fr, minmax(200px, 1fr) );
+  grid-auto-rows: 1fr;
+  grid-gap: 1em;
 }
+
 
 .App-header {
   background-color: #282c34;
