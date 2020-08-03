@@ -30,18 +30,38 @@ body {
   max-width: 1080px;
   margin: 0 auto;
   font-size: 1rem;
+  padding: 1.5em;
 }
 
 .form-group {
   display: flex;
-  justify-content: space-between;
-  padding:0 1em ;
+  justify-content: flex-start;
+  padding:0;
 }
 
-.form-group + .form-group {
+.form-group  {
   margin-top: 0.9em;
 }
 
+label {
+  margin-right: 1.5em;
+  width: 10%;
+}
+
+.form-control {
+  border-radius: 5px;
+  padding:0.4em 1em;
+  width: 80%;
+  border-color: var(--brand-color);
+  border-width: 1px;
+  margin:0 1.5em;
+  border-style: solid;
+}
+
+.form-control:focus {
+  outline: none;
+  box-shadow: 1px 1px 0.5em #61dafb;
+}
 .title {
   font-size: 1.2rem;
   margin:0.6em;
@@ -111,8 +131,22 @@ body {
 
 /* Button */
 .btn {
-  padding:1em 1.5em;
+  padding:0.5em 1.5em;
+  border-color: var(--brand-color);
+  background-color: white;
+  color: var(--brand-color);
+  font-size: 1.2rem;
+  border-radius: 0;
+  border-width: 2px;
+  margin:1em 0;
+}
+
+.btn:focus {
+  outline: none;
+  box-shadow: 2px 2px 0.5em var(--brand-color);
+  color:white;
   background-color: var(--brand-color);
+  border: none;
 }
 /* Media Queries */
 @media(min-width:50em) {

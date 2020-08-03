@@ -3,11 +3,11 @@ import './App.css';
 import ReactMapboxGl, { Layer, Feature, Marker, Cluster } from 'react-mapbox-gl';
 // import SliderCheckbox from './components/SliderCheckbox';
 // import InputGroup from './components/InputGroup';
-// import TextInput from './components/TextInput';
+import TextInput from './components/TextInput';
 import Button from './components/Button';
 import data from './assets/data.json';
 import questions from './assets/questions.json';
-import { render } from '@testing-library/react';
+import InputGroup from './components/InputGroup';
 
 const Map = ReactMapboxGl({
   accessToken:
@@ -16,13 +16,18 @@ const Map = ReactMapboxGl({
 
 function App() {
   const [problemA, setProblemA] = useState(false);
-  // const [problemB, setProblemB] = useState(false);
-  // const [problemC, setProblemC] = useState(false);
+  const [values, setValues] = useState({});
+  const [errors, setErrors] = useState({});
+  const [zoom, setZoom] = useState(5);
+  const [center, setCenter] = useState([12.368531078853298, 50.824523354309598])
 
   const changeHandler = (event) => {
     const target = event.target;
-    console.log(target.checked);
-    setProblemA(!problemA);
+    const {name, value} = target;
+
+    console.log(name + ": " + value);
+
+    setValues({...values, [name]:value})
   }
 
   const clusterMarker = (coordinates, pointCount) => (
@@ -38,14 +43,14 @@ function App() {
 
   }
 
-  const renderOptions = (options) => {
+  const renderOptions = (options, name) => {
     var alphabet = ["a","b","c","d","e","f","g","h","i","j","k","l","m"];
     return (
       <div>
         { 
         options.map((option, key) => (
           <div>
-            <input type="checkbox" name="" />
+            <input type="radio" name={name} onChange={changeHandler} value={option} required/>
             <label> {alphabet[key]}. {option}</label>
           </div>
           ))
@@ -54,8 +59,20 @@ function App() {
     )
   }
   const handleSubmit = (event) => {
-    event.preventDefault()
+    event.preventDefault();
+
+    console.log(values);
+
   };
+
+  const zoomendHandler = (map, event) => {
+    let currentZoom = map.getZoom();
+    let currentCenter = map.getCenter();
+
+    setZoom(currentZoom);
+    setCenter(currentCenter);
+
+  }
 
   return (
     <div className="App">
@@ -64,8 +81,9 @@ function App() {
             <Map
               style="mapbox://styles/mapbox/streets-v9"
               className="map"
-              center={[12.368531078853298, 50.824523354309598]}
-              zoom={[5]}
+              center={center}
+              zoom={[zoom]}
+              onZoomEnd={zoomendHandler}
             >
               <Layer type="symbol" id="marker" layout={{ 'icon-image': 'marker-15' }}>
                 <Feature coordinates={[-0.481747846041145, 51.3233379650232]} />
@@ -99,10 +117,28 @@ function App() {
                     questions.map((question, key) => (
                       <div className="question">
                         <p>{key + 1}. {question.question}</p>
-                        {renderOptions(question.options)}
+                        {renderOptions(question.options, question.name)}
                       </div>
                     ))
                   }
+
+                  {
+                    ['Country', 'City', 'Street'].map((el, key)=> (
+                      <InputGroup
+                        label={el}
+                        key={key}
+                      >
+                        <TextInput 
+                          type={"text"}
+                          name={el.toLocaleLowerCase()}
+                          value={values.name}
+                          onChange={changeHandler}
+                        />
+                      </InputGroup>
+                    ))
+                  }
+                  
+                  
                   <Button
                     type="submit"
                     text="Submit Quetionnaire"
