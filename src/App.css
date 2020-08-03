@@ -8,6 +8,8 @@
 body {
   box-sizing: border-box;
   font-size: calc(0.625em + 2vmin);
+  margin: 0;
+  padding: 0;
 }
 
 .row {
@@ -95,6 +97,11 @@ label {
   text-align: center;
 }
 
+.text {
+  font-size: 1rem;
+  margin:auto
+}
+
 .label {
   font-size: 1rem;
 }
@@ -177,7 +184,8 @@ label {
 /* Media Queries */
 @media(min-width:50em) {
   .row {
-    grid-template-columns: 2fr 1fr;
+    width: 100%;
+    margin:0;
   }
 
   .map{
@@ -190,26 +198,3 @@ label {
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}

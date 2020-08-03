@@ -1,13 +1,12 @@
 import React, { useState, useEffect }  from 'react';
 import './App.css';
-import ReactMapboxGl, { Layer, Feature, Marker, Cluster, Popup } from 'react-mapbox-gl';
-import axios from 'axios';
+import ReactMapboxGl, { Layer, Feature, Marker, Cluster } from 'react-mapbox-gl';
 import TextInput from './components/TextInput';
 import Button from './components/Button';
 
 import InputGroup from './components/InputGroup';
 
-import data from './assets/data.json';
+// import data from './assets/data.json';
 import questions from './assets/questions.json';
 import otherQuestions from './assets/secondary_questions.json';
 
@@ -26,6 +25,42 @@ function App() {
   const [center, setCenter] = useState([12.368531078853298, 50.824523354309598]);
   const [popupContent, setPopupContent] = useState({});
   const [surveySession, setSurveySession] = useState(true);
+  const [data, setData] = useState({});
+
+  useEffect(() => {
+    // get data from the database
+    // axios.get('/').then(response => {
+    //   createGeojson(response);
+    // })
+  },[]);
+
+  // create geojson
+  const createGeojson = (dataItems) => {
+    let geojObj = {
+      "type":"FeatureCollection",
+      "features":[]
+    };
+
+    console.log(values);
+    dataItems = dataItems[0] ? dataItems : [values];
+
+    dataItems.forEach((item,i) => {
+      let feature = {
+        "geometry":{
+          "coordinates":item.coordinates
+        },
+        "properties":{ 
+            ...item, 
+            id:i
+        }
+      }
+
+      geojObj.features.push(feature);
+    });
+
+    console.log(geojObj);
+    setData(geojObj);
+  }
 
   // update form values
   const changeHandler = (event) => {
@@ -35,6 +70,7 @@ function App() {
     setValues({...values, [name]:value});
   }
 
+  // cluster Marker factory
   const clusterMarker = (coordinates, pointCount) => (
     <Marker 
       key={Math.random()}
@@ -45,6 +81,7 @@ function App() {
   );
 
   const onMarkerClick = (feature) => {
+    console.log(feature);
     setPopupContent(feature);
   
   }
@@ -55,7 +92,9 @@ function App() {
       <div>
         { 
         options.map((option, key) => (
-          <div>
+          <div
+            key={key}
+          >
             <input type="radio" name={name} onChange={changeHandler} value={option} required/>
             <label> {alphabet[key]}. {option}</label>
           </div>
@@ -66,21 +105,30 @@ function App() {
   }
 
   // commit form input 
-  const commitData = () => {
-    axios.post(
-      '/',
+  const commitData = (coord) => {
+    console.log(values);
+
+    setSurveySession(false);
+    createGeojson([
       {
-        ...values
+        ...values,
+        coordinates:coord
       }
-    )
-    .then(response => {
-      if(response.status == 200) {
-        setSurveySession(false);
-      }
-    })
-    .catch(error => {
-      alert(error.message);
-    });
+    ]);
+    // axios.post(
+    //   '/',
+    //   {
+    //     ...values
+    //   }
+    // )
+    // .then(response => {
+    //   if(response.status == 200) {
+    //     setSurveySession(false);
+    //   }
+    // })
+    // .catch(error => {
+    //   alert(error.message);
+    // });
     
   }
 
@@ -89,7 +137,7 @@ function App() {
     let url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/'+address+'.json?&access_token='+accessToken;
     
     let data = await fetch(url).then(res => res.json())
-                  .catch(error => {
+                  .catch(() => {
                         return [];
                   });
       
@@ -97,8 +145,8 @@ function App() {
 
     if(data) {
       setValues({...values, coordinates:data.features[0].geometry.coordinates});
-
       // call axios to submit the data
+      commitData(data.features[0].geometry.coordinates);
 
     } else{
       setErrors({...errors, address:"invalid address"})
@@ -113,7 +161,7 @@ function App() {
 
   };
 
-  const zoomendHandler = (map, event) => {
+  const zoomendHandler = (map) => {
     let currentZoom = map.getZoom();
     let currentCenter = map.getCenter();
 
@@ -123,11 +171,10 @@ function App() {
   }
 
   // toggle description
-  const toggleDescription = (event) => {
+  const toggleDescription = () => {
     setPopupContent({});
   }
 
-  console.log(values);
   return (
     <div className="App">
       <div className="">
@@ -143,26 +190,29 @@ function App() {
                 <Feature coordinates={[-0.481747846041145, 51.3233379650232]} />
               </Layer>
 
-              <Cluster 
-                ClusterMarkerFactory={clusterMarker}
-                zoomOnClick={true}
-                radius={100}
-                >
-                {
-                  data.features.map((feature, key) =>
-                    <Marker
-                      key={key}
-                      coordinates={feature.geometry.coordinates}
-                      onClick={() => onMarkerClick(feature)}>
-                        <MarkerDiv 
-                          key={key}
-                          problem={feature.properties.problem}
-                          options={questions}
-                        />
-                    </Marker>
-                  )
-                }
-              </Cluster>
+              {
+                data.type &&
+                <Cluster 
+                  ClusterMarkerFactory={clusterMarker}
+                  zoomOnClick={true}
+                  radius={100}
+                  >
+                  {
+                    data.features.map((feature, key) =>
+                      <Marker
+                        key={key}
+                        coordinates={feature.geometry.coordinates}
+                        onClick={() => onMarkerClick(feature)}>
+                          <MarkerDiv 
+                            key={key}
+                            feature={feature}
+                            options={questions}
+                          />
+                      </Marker>
+                    )
+                  }
+                </Cluster>
+              } 
 
               {
                 popupContent.geometry &&
@@ -180,11 +230,12 @@ function App() {
                   className="close-btn"
                   onClick={toggleDescription}
                   >&#215;</button>
-                <h6 className="title">Fill the details {popupContent.properties.one}</h6>
+                 <p className="text">I feel: {popupContent.properties.one}</p>
+                <h6 className="title">Fill the details below</h6>
                 <form onSubmit={handleSubmit}>
                   {
                     otherQuestions.map((question, key) => (
-                      <div className="question">
+                      <div className="question" key={key}>
                         <p>{key + 1}. {question.question}</p>
                         {renderOptions(question.options, question.name)}
                       </div>
@@ -202,11 +253,12 @@ function App() {
           {
           surveySession &&
           <div className="form-section">
+
               <h4 className="title">Kindly fill all the questions</h4>
               <form onSubmit={handleSubmit}>
                   {
                     questions.map((question, key) => (
-                      <div className="question">
+                      <div className="question" key={key}>
                         <p>{key + 1}. {question.question}</p>
                         {renderOptions(question.options, question.name)}
                       </div>
@@ -243,21 +295,23 @@ function App() {
 }
 
 const MarkerDiv = (props) => {
-  // ["#88CCEE", "#CC6677", "#DDCC77", "#117733", "#117733", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"]
-  console.log(props.options);
+  // color codes and list option
+  let colors = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628'];
+  let options = questions[0].options;
 
-  const colors = {
-    'Extraordinary':"#88CCEE",
-    'Happy':"#CC6677",
-    'Casual':"#DDCC77",
-    'Problem D':"#117733",
-    'Problem E':"#882255" ,
-    'Problem F':"#AA4499",
-  };
+  // create color object
+  let colorsObject = options.reduce((pv,cv,i) => {
+    pv[cv] = colors[i]
+    return pv;
+  },{});
 
-  const color = colors[props.problem];
+  // get the color
+  const color = colorsObject[props.feature.properties.one];
+
+  // return the div
   return (
     <div 
+      key={props.feature.properties.id.toString()}
       style={{
         backgroundColor:color,
         ...styles.marker, 
@@ -267,14 +321,6 @@ const MarkerDiv = (props) => {
   )
 }
 
-// popup content
-const PopupDiv = (props) => {
-  return(
-    <div className>
-
-    </div>
-  );
-}
 
 const styles = {
   marker:{
