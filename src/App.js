@@ -1,33 +1,38 @@
-import React, { useState, StyleS }  from 'react';
+import React, { useState, useEffect }  from 'react';
 import './App.css';
-import ReactMapboxGl, { Layer, Feature, Marker, Cluster } from 'react-mapbox-gl';
-// import SliderCheckbox from './components/SliderCheckbox';
-// import InputGroup from './components/InputGroup';
+import ReactMapboxGl, { Layer, Feature, Marker, Cluster, Popup } from 'react-mapbox-gl';
+import axios from 'axios';
 import TextInput from './components/TextInput';
 import Button from './components/Button';
-import data from './assets/data.json';
-import questions from './assets/questions.json';
+
 import InputGroup from './components/InputGroup';
 
+import data from './assets/data.json';
+import questions from './assets/questions.json';
+import otherQuestions from './assets/secondary_questions.json';
+
+import markerUrl from './assets/images/marker.png';
+
+const accessToken = 'pk.eyJ1IjoiZGF1ZGk5NyIsImEiOiJjanJtY3B1bjYwZ3F2NGFvOXZ1a29iMmp6In0.9ZdvuGInodgDk7cv-KlujA';
+
 const Map = ReactMapboxGl({
-  accessToken:
-  'pk.eyJ1IjoiZGF1ZGk5NyIsImEiOiJjanJtY3B1bjYwZ3F2NGFvOXZ1a29iMmp6In0.9ZdvuGInodgDk7cv-KlujA'
+  accessToken:accessToken
 });
 
 function App() {
-  const [problemA, setProblemA] = useState(false);
   const [values, setValues] = useState({});
   const [errors, setErrors] = useState({});
   const [zoom, setZoom] = useState(5);
-  const [center, setCenter] = useState([12.368531078853298, 50.824523354309598])
+  const [center, setCenter] = useState([12.368531078853298, 50.824523354309598]);
+  const [popupContent, setPopupContent] = useState({});
+  const [surveySession, setSurveySession] = useState(true);
 
+  // update form values
   const changeHandler = (event) => {
     const target = event.target;
     const {name, value} = target;
 
-    console.log(name + ": " + value);
-
-    setValues({...values, [name]:value})
+    setValues({...values, [name]:value});
   }
 
   const clusterMarker = (coordinates, pointCount) => (
@@ -39,8 +44,9 @@ function App() {
     </Marker>
   );
 
-  const onMarkerClick = (e) => {
-
+  const onMarkerClick = (feature) => {
+    setPopupContent(feature);
+  
   }
 
   const renderOptions = (options, name) => {
@@ -58,10 +64,52 @@ function App() {
       </div>
     )
   }
+
+  // commit form input 
+  const commitData = () => {
+    axios.post(
+      '/',
+      {
+        ...values
+      }
+    )
+    .then(response => {
+      if(response.status == 200) {
+        setSurveySession(false);
+      }
+    })
+    .catch(error => {
+      alert(error.message);
+    });
+    
+  }
+
+  // geocode the address
+  const geocodeData = async (address) => {
+    let url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/'+address+'.json?&access_token='+accessToken;
+    
+    let data = await fetch(url).then(res => res.json())
+                  .catch(error => {
+                        return [];
+                  });
+      
+                
+
+    if(data) {
+      setValues({...values, coordinates:data.features[0].geometry.coordinates});
+
+      // call axios to submit the data
+
+    } else{
+      setErrors({...errors, address:"invalid address"})
+    }
+    
+  }
+  // submit the data
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    console.log(values);
+    geocodeData(values.street+' '+ values.city, values.country);
 
   };
 
@@ -74,10 +122,16 @@ function App() {
 
   }
 
+  // toggle description
+  const toggleDescription = (event) => {
+    setPopupContent({});
+  }
+
+  console.log(values);
   return (
     <div className="App">
       <div className="">
-          <div className="">
+          <div className="row">
             <Map
               style="mapbox://styles/mapbox/streets-v9"
               className="map"
@@ -99,17 +153,54 @@ function App() {
                     <Marker
                       key={key}
                       coordinates={feature.geometry.coordinates}
-                      onClick={onMarkerClick}>
+                      onClick={() => onMarkerClick(feature)}>
                         <MarkerDiv 
                           key={key}
                           problem={feature.properties.problem}
+                          options={questions}
                         />
                     </Marker>
                   )
                 }
               </Cluster>
+
+              {
+                popupContent.geometry &&
+                <Marker
+                  coordinates={popupContent.geometry.coordinates}
+                  anchor="bottom">
+                  <img src={markerUrl}/>
+                </Marker>
+              }
             </Map>
+            {
+              popupContent.properties &&
+              <div className="description">
+                <button 
+                  className="close-btn"
+                  onClick={toggleDescription}
+                  >&#215;</button>
+                <h6 className="title">Fill the details {popupContent.properties.one}</h6>
+                <form onSubmit={handleSubmit}>
+                  {
+                    otherQuestions.map((question, key) => (
+                      <div className="question">
+                        <p>{key + 1}. {question.question}</p>
+                        {renderOptions(question.options, question.name)}
+                      </div>
+                    ))
+                  }
+
+                  <Button
+                    type="submit"
+                    text="Submit Questionnaire"
+                  />
+                </form>
+              </div>
+            }
           </div>
+          {
+          surveySession &&
           <div className="form-section">
               <h4 className="title">Kindly fill all the questions</h4>
               <form onSubmit={handleSubmit}>
@@ -145,6 +236,7 @@ function App() {
                   />
               </form>
           </div>
+        }
       </div>
     </div>
   );
@@ -152,10 +244,12 @@ function App() {
 
 const MarkerDiv = (props) => {
   // ["#88CCEE", "#CC6677", "#DDCC77", "#117733", "#117733", "#AA4499", "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888"]
+  console.log(props.options);
+
   const colors = {
-    'Problem A':"#88CCEE",
-    'Problem B':"#CC6677",
-    'Problem C':"#DDCC77",
+    'Extraordinary':"#88CCEE",
+    'Happy':"#CC6677",
+    'Casual':"#DDCC77",
     'Problem D':"#117733",
     'Problem E':"#882255" ,
     'Problem F':"#AA4499",
@@ -171,6 +265,15 @@ const MarkerDiv = (props) => {
     >
     </div>
   )
+}
+
+// popup content
+const PopupDiv = (props) => {
+  return(
+    <div className>
+
+    </div>
+  );
 }
 
 const styles = {
