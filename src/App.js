@@ -25,7 +25,10 @@ function App() {
   const [center, setCenter] = useState([12.368531078853298, 50.824523354309598]);
   const [popupContent, setPopupContent] = useState({});
   const [surveySession, setSurveySession] = useState(true);
-  const [data, setData] = useState({});
+  const [data, setData] = useState({
+    "type":"FeatureCollection",
+    "features":[]
+  });
 
   useEffect(() => {
     // get data from the database
@@ -36,12 +39,8 @@ function App() {
 
   // create geojson
   const createGeojson = (dataItems) => {
-    let geojObj = {
-      "type":"FeatureCollection",
-      "features":[]
-    };
+    let geojObj = JSON.parse(JSON.stringify(data));
 
-    console.log(values);
     dataItems = dataItems[0] ? dataItems : [values];
 
     dataItems.forEach((item,i) => {
@@ -142,7 +141,6 @@ function App() {
                   });
       
                 
-
     if(data) {
       setValues({...values, coordinates:data.features[0].geometry.coordinates});
       // call axios to submit the data
@@ -230,26 +228,21 @@ function App() {
                   className="close-btn"
                   onClick={toggleDescription}
                   >&#215;</button>
-                 <p className="text">I feel: {popupContent.properties.one}</p>
-                <h6 className="title">Fill the details below</h6>
-                <form onSubmit={handleSubmit}>
-                  {
-                    otherQuestions.map((question, key) => (
-                      <div className="question" key={key}>
-                        <p>{key + 1}. {question.question}</p>
-                        {renderOptions(question.options, question.name)}
-                      </div>
-                    ))
-                  }
-
-                  <Button
-                    type="submit"
-                    text="Submit Questionnaire"
-                  />
-                </form>
+                  <h5 className="title">{popupContent.properties.street} {popupContent.properties.city}, {popupContent.properties.country}</h5>
+                 <p className="text">Fealing <b>{popupContent.properties.one}</b></p>
+                 <p className="text">Period <b>{popupContent.properties.two}</b></p>
+                 <p className="text">Doctor Visit <b>{popupContent.properties.three}</b></p>
               </div>
             }
           </div>
+          {
+            !surveySession &&
+            <button 
+              className="btn btn-float"
+              onClick={() => setSurveySession(true)}
+            >Add Entry + </button>
+          }
+         
           {
           surveySession &&
           <div className="form-section">

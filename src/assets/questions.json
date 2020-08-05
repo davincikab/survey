@@ -10,5 +10,26 @@
             "Lonely",
             "Sad"
         ]
+    },
+    {
+        "question":"Since when are you felling like this ?",
+        "name":"two",
+        "type":"multiple answers",
+        "options" :[
+            "1 week",
+            "4-5 days",
+            "2-3 days",
+            "1 or 2 days",
+            "Today"
+        ]
+    },
+    {
+        "question":"Did you go to the doctor and got the same diagnoses ?",
+        "name":"three",
+        "type":"single answer",
+        "options" :[
+            "Yes / Same diagnoses ",
+            "No"
+        ]
     }
 ]
