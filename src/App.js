@@ -11,7 +11,6 @@ import questions from './assets/questions.json';
 import otherQuestions from './assets/secondary_questions.json';
 
 import markerUrl from './assets/images/marker.png';
-
 const accessToken = 'pk.eyJ1IjoiZGF1ZGk5NyIsImEiOiJjanJtY3B1bjYwZ3F2NGFvOXZ1a29iMmp6In0.9ZdvuGInodgDk7cv-KlujA';
 
 const Map = ReactMapboxGl({
@@ -57,7 +56,7 @@ function App() {
       geojObj.features.push(feature);
     });
 
-    console.log(geojObj);
+    // update the data 
     setData(geojObj);
   }
 
@@ -79,12 +78,14 @@ function App() {
     </Marker>
   );
 
+  // handle marker click event: update popup content
   const onMarkerClick = (feature) => {
     console.log(feature);
     setPopupContent(feature);
   
   }
 
+  // create the question option
   const renderOptions = (options, name) => {
     var alphabet = ["a","b","c","d","e","f","g","h","i","j","k","l","m"];
     return (
@@ -142,7 +143,9 @@ function App() {
       
                 
     if(data) {
+      // update the form data
       setValues({...values, coordinates:data.features[0].geometry.coordinates});
+
       // call axios to submit the data
       commitData(data.features[0].geometry.coordinates);
 
